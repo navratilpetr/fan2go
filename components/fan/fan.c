@@ -178,12 +178,6 @@ void fan_init_all(void)
 
     fan_detect_connected(g_fans, MAX_FANS);
 
-    for (int i = 0; i < MAX_FANS; ++i) {
-        if (g_fans[i].connected) {
-            fan_set_duty_percent(&g_fans[i], 50);
-        }
-    }
-
     xTaskCreate(fan_rpm_task, "fan_rpm", 4096, NULL, 5, NULL);
 }
 
