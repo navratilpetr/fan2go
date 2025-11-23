@@ -9,16 +9,23 @@
 #include "driver/pcnt.h"
 #include "driver/gpio.h"
 
-#define MAX_FANS            5
-#define FAN_PULSES_PER_REV  2
-#define RPM_INTERVAL_MS     1000
-#define DETECT_INTERVAL_MS  1000
-#define DETECT_MIN_PULSES   5
+#include "config.h"
+
+/* map config.h -> lokální makra pro přehlednost */
+#define MAX_FANS            CONFIG_MAX_FANS
+#define RPM_INTERVAL_MS     FAN_RPM_INTERVAL_MS
+#define DETECT_INTERVAL_MS  FAN_DETECT_MS
+#define DETECT_MIN_PULSES   FAN_DETECT_MIN_PULSES
 
 #define LEDC_TIMER          LEDC_TIMER_0
 #define LEDC_MODE_USED      LEDC_HIGH_SPEED_MODE
-#define LEDC_FREQ_HZ        25000
+#define LEDC_FREQ_HZ        FAN_PWM_FREQ_HZ
+
+#if FAN_PWM_RES_BITS == 8
 #define LEDC_RESOLUTION     LEDC_TIMER_8_BIT
+#else
+#error "Unsupported FAN_PWM_RES_BITS (only 8 implemented)"
+#endif
 
 typedef struct {
     int index;
@@ -38,11 +45,11 @@ static void fan_detect_connected(fan_t fans[], int count);
 static void fan_rpm_task(void *arg);
 
 static fan_t g_fans[MAX_FANS] = {
-    { 0, GPIO_NUM_23, LEDC_CHANNEL_0, GPIO_NUM_32, PCNT_UNIT_0, false, 0, 0 },
-    { 1, GPIO_NUM_19, LEDC_CHANNEL_1, GPIO_NUM_33, PCNT_UNIT_1, false, 0, 0 },
-    { 2, GPIO_NUM_18, LEDC_CHANNEL_2, GPIO_NUM_25, PCNT_UNIT_2, false, 0, 0 },
-    { 3, GPIO_NUM_5,  LEDC_CHANNEL_3, GPIO_NUM_26, PCNT_UNIT_3, false, 0, 0 },
-    { 4, GPIO_NUM_4,  LEDC_CHANNEL_4, GPIO_NUM_27, PCNT_UNIT_4, false, 0, 0 },
+    { 0, FAN_PWM_0, LEDC_CHANNEL_0, FAN_TAC_0, PCNT_UNIT_0, false, 0, 0 },
+    { 1, FAN_PWM_1, LEDC_CHANNEL_1, FAN_TAC_1, PCNT_UNIT_1, false, 0, 0 },
+    { 2, FAN_PWM_2, LEDC_CHANNEL_2, FAN_TAC_2, PCNT_UNIT_2, false, 0, 0 },
+    { 3, FAN_PWM_3, LEDC_CHANNEL_3, FAN_TAC_3, PCNT_UNIT_3, false, 0, 0 },
+    { 4, FAN_PWM_4, LEDC_CHANNEL_4, FAN_TAC_4, PCNT_UNIT_4, false, 0, 0 },
 };
 
 static void fan_ledc_init_global(void)
@@ -71,21 +78,21 @@ static void fan_ledc_init_channel(fan_t *fan)
     ledc_channel_config(&ch);
 }
 
-void *fan_get_ptr(int idx) {
+void *fan_get_ptr(int idx)
+{
     return (idx >= 0 && idx < MAX_FANS) ? &g_fans[idx] : NULL;
 }
-
 
 void fan_set_duty_percent(void *fan_ptr, int duty_percent)
 {
     if (duty_percent < 0) duty_percent = 0;
     if (duty_percent > 100) duty_percent = 100;
 
-    int idx = (fan_ptr == NULL) ? 0 : ((fan_t*)fan_ptr)->index;
+    int idx = (fan_ptr == NULL) ? 0 : ((fan_t *)fan_ptr)->index;
     g_fans[idx].duty = duty_percent;
 
-    uint32_t max_duty = (1 << LEDC_RESOLUTION) - 1;
-    uint32_t duty = (max_duty * duty_percent) / 100;
+    uint32_t max_duty = (1u << LEDC_RESOLUTION) - 1u;
+    uint32_t duty = (max_duty * (uint32_t)duty_percent) / 100u;
 
     ledc_set_duty(LEDC_MODE_USED, g_fans[idx].ledc_channel, duty);
     ledc_update_duty(LEDC_MODE_USED, g_fans[idx].ledc_channel);
@@ -156,7 +163,7 @@ static void fan_rpm_task(void *arg)
             int16_t pulses = 0;
             pcnt_get_counter_value(g_fans[i].pcnt_unit, &pulses);
 
-            float rps = (float)pulses / FAN_PULSES_PER_REV;
+            float rps = (float)pulses / (float)FAN_PULSES_PER_REV;
             if (rps < 0) rps = 0;
             g_fans[i].rpm = (uint32_t)(rps * 60.0f);
 
