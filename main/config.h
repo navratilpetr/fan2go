@@ -27,12 +27,21 @@
 #define FAN_DETECT_MIN_PULSES 5
 #define FAN_RPM_INTERVAL_MS   1000
 
-/* === Default duty % === */
+/* === Default duty % (0–100) === */
 #define FAN_DEFAULT_DUTY      50
 
-/* === Reserved for future WiFi/MQTT === */
+/* === WiFi / MQTT config === */
 #define WIFI_SSID     "SSID"
 #define WIFI_PASS     "PASSWORD"
+
 #define MQTT_HOST     "mqtt.local"
+#define MQTT_PORT     1883
 #define MQTT_CLIENTID "fan2go"
+
+/* === MQTT topics === */
+#define MQTT_BASE_TOPIC        "fan2go"
+#define MQTT_CMD_FAN_TEMPLATE  "fan2go/cmd/fan/%d/set"  /* payload: 0-100 */
+#define MQTT_CMD_ALL_TOPIC     "fan2go/cmd/all/set"     /* payload: 0-100 = set all */
+#define MQTT_STATE_FAN_TEMPLATE "fan2go/state/fan/%d"   /* payload: connected rpm duty */
+#define MQTT_STATE_ALL_TOPIC   "fan2go/state/all"       /* payload: same format as UART GET ALL */
 
