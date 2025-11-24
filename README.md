@@ -61,8 +61,8 @@ Parametry se nastavují v `config.h`:
 | `SET FAN X Y` | Nastavit fan X na Y % | `OK` nebo `ERR` |
 | `GET FAN X` | Info o ventilátoru X | `FAN X Connected RPM Duty` |
 | `GET ALL` | Stav všech fanů | `ALL mask rpm... duty...` |
-| **`GET RPM X`** | Vrátí RPM fan X | `RPM X value` |
-| **`GET DUTY X`** | Vrátí PWM fan X (%) | `DUTY X value` |
+| `GET RPM X` | Vrátí RPM fan X | `RPM X value` |
+| `GET DUTY X` | Vrátí PWM fan X (%) | `DUTY X value` |
 | `SET WIFI ssid pass` | Uloží WiFi údaje do NVS | `OK` |
 | `GET WIFI` | Vrátí uložené WiFi údaje | `WIFI ssid pass` |
 | `SET MQTT host clientid` | Uloží MQTT do NVS | `OK` |
