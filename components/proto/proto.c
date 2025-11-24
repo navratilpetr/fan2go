@@ -17,6 +17,7 @@ static void fan_handle_command(const char *line)
         int idx, duty;
         if (sscanf(line + 8, "%d %d", &idx, &duty) == 2 && idx >= 0) {
             fan_set_duty_percent(fan_get_ptr(idx), duty);
+            fan_backend_alive();      /* RESET FALLBACK */
             printf("OK\n");
         } else {
             printf("ERR\n");
@@ -33,6 +34,7 @@ static void fan_handle_command(const char *line)
                    fan_is_connected(idx) ? 1 : 0,
                    fan_get_rpm(idx),
                    fan_get_duty(idx));
+            fan_backend_alive();      /* READ also counts as backend activity */
         } else {
             printf("ERR\n");
         }
@@ -51,12 +53,15 @@ static void fan_handle_command(const char *line)
         for (int i = 0; i < CONFIG_MAX_FANS; i++)
             printf(" %d", fan_get_duty(i));
         printf("\n");
+
+        fan_backend_alive();          /* READ also counts */
         return;
     }
 
     /* PING */
     if (strcmp(line, "PING") == 0) {
         printf("PONG\n");
+        fan_backend_alive();          /* backend alive */
         return;
     }
 
@@ -72,6 +77,7 @@ static void fan_handle_command(const char *line)
             strncpy(cfg.pass, pass, sizeof(cfg.pass) - 1);
             storage_set_wifi(&cfg);
             printf("OK\n");
+            fan_backend_alive();
         } else {
             printf("ERR\n");
         }
@@ -83,23 +89,25 @@ static void fan_handle_command(const char *line)
         wifi_conf_t cfg;
         storage_get_wifi(&cfg);
         printf("WIFI %s %s\n", cfg.ssid, cfg.pass);
+        fan_backend_alive();
         return;
     }
 
-    /* SET MQTT host clientid (port necháme 1883 nebo co je v NVS) */
+    /* SET MQTT host clientid */
     if (strncmp(line, "SET MQTT ", 9) == 0) {
         char host[64];
         char cid[64];
 
         if (sscanf(line + 9, "%63s %63s", host, cid) == 2) {
             mqtt_conf_t cfg;
-            storage_get_mqtt(&cfg);  /* zachová port */
+            storage_get_mqtt(&cfg);
             strncpy(cfg.host, host, sizeof(cfg.host) - 1);
             cfg.host[sizeof(cfg.host) - 1] = 0;
             strncpy(cfg.client_id, cid, sizeof(cfg.client_id) - 1);
             cfg.client_id[sizeof(cfg.client_id) - 1] = 0;
             storage_set_mqtt(&cfg);
             printf("OK\n");
+            fan_backend_alive();
         } else {
             printf("ERR\n");
         }
@@ -111,6 +119,7 @@ static void fan_handle_command(const char *line)
         mqtt_conf_t cfg;
         storage_get_mqtt(&cfg);
         printf("MQTT %s %d %s\n", cfg.host, cfg.port, cfg.client_id);
+        fan_backend_alive();
         return;
     }
 
@@ -135,7 +144,7 @@ static void fan_console_task(void *arg)
         while (len > 0 && (line[len - 1] == '\r' || line[len - 1] == '\n'))
             line[--len] = 0;
 
-        if (len < 3) continue;
+        if (len < 1) continue;
 
         fan_handle_command(line);
     }
