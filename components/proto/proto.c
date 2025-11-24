@@ -25,6 +25,17 @@ static void fan_handle_command(const char *line)
         return;
     }
 
+    /* GET RPM idx */
+    if (strncmp(line, "GET RPM ", 8) == 0) {
+        int idx;
+        if (sscanf(line + 8, "%d", &idx) == 1) {
+            printf("RPM %d %" PRIu32 "\n", idx, fan_get_rpm(idx));
+        } else {
+            printf("ERR\n");
+	}
+        return;
+    } 
+
     /* GET FAN idx */
     if (strncmp(line, "GET FAN ", 8) == 0) {
         int idx;
@@ -35,6 +46,17 @@ static void fan_handle_command(const char *line)
                    fan_get_rpm(idx),
                    fan_get_duty(idx));
             fan_backend_alive();      /* READ also counts as backend activity */
+        } else {
+            printf("ERR\n");
+        }
+        return;
+    }
+
+    /* GET DUTY idx */
+    if (strncmp(line, "GET DUTY ", 9) == 0) {
+        int idx;
+        if (sscanf(line + 9, "%d", &idx) == 1) {
+            printf("DUTY %d %d\n", idx, fan_get_duty(idx));
         } else {
             printf("ERR\n");
         }
