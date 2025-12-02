@@ -37,7 +37,7 @@
 /* If backend sends no UART commands for X ms, force safe fan speed */
 #define FAN_FALLBACK_MS       120000
 /* Safe fallback speed after timeout (scaled %, 0–100) */
-#define FAN_FALLBACK_DUTY     40
+#define FAN_FALLBACK_DUTY     0
 
 /* === DEFAULT DUTY (only used before calibration) === */
 #define FAN_DEFAULT_DUTY      50
