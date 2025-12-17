@@ -5,7 +5,7 @@ ESP32 PWM + RPM controller pro až 5× 4-pin PC ventilátorů.
 
 ---
 
-FUNKCE
+###FUNKCE
 - Ovládání až 5 ventilátorů (fan0–fan4)
 - PWM řízení 0–100 % (interně ESP32)
 - Měření RPM přes tachometr
@@ -20,7 +20,7 @@ FUNKCE
 
 ---
 
-PWM A ROZSAHY
+###PWM A ROZSAHY
 - ESP32 pracuje s PWM v rozsahu 0–100 %
 - Linux hwmon používá rozsah 0–255
 - Přepočet 0–255 ↔ 0–100 zajišťuje USB bridge
@@ -28,7 +28,7 @@ PWM A ROZSAHY
 
 ---
 
-AUTOKALIBRACE
+###AUTOKALIBRACE
 Autokalibrace slouží ke zjištění minimální hodnoty PWM, při které se ventilátor skutečně roztočí.
 
 Princip:
@@ -46,7 +46,7 @@ Doporučeno vypnout u ventilátorů, které při nízkých otáčkách reportuj�
 
 ---
 
-FALLBACK (BEZPECNOST)
+###FALLBACK (BEZPECNOST)
 Pokud ESP po definovanou dobu nedostane žádný příkaz z backendu (USB / MQTT), automaticky nastaví bezpečné otáčky.
 
 Nastavení v config.h:
@@ -56,7 +56,7 @@ Nastavení v config.h:
 
 ---
 
-PINY (main/config.h)
+###PINY (main/config.h)
 
 Fan 0: PWM 23, TACH 32  
 Fan 1: PWM 19, TACH 33  
@@ -82,7 +82,7 @@ Fan 4: PWM 4,  TACH 27
 
 ---
 
-MQTT
+###MQTT
 - MQTT je pouze pro monitoring
 - Nenastavuje PWM
 - Publikuje RPM, duty a stav připojení
@@ -97,7 +97,7 @@ V Home Assistant se vytvoří:
 
 ---
 
-LINUX INTEGRACE
+###LINUX INTEGRACE
 Projekt počítá s Linux backendem:
 - kernel modul espfan (hwmon)
 - userspace USB bridge
@@ -110,7 +110,7 @@ MIT
 
 ---
 
-POZNAMKA
+###POZNAMKA
 ESP32 řeší real-time část (PWM, RPM, bezpečnost).  
 Linux / Home Assistant řeší logiku, monitoring a automatizace.  
 Projekt je navržen jako stabilní backend, ne jako experiment.
