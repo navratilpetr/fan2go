@@ -27,6 +27,12 @@
 #define FAN_DETECT_MIN_PULSES 5
 #define FAN_RPM_INTERVAL_MS   1000
 
+/* === FAN CALIBRATION ENABLE === */
+/* 1 = enable autocalibration on boot */
+/* 0 = disable calibration completely */
+#define FAN_ENABLE_CALIBRATION 0
+
+
 /* === AUTOCALIBRATION === */
 /* Step size for increasing PWM percentage (x % per step) */
 #define FAN_CAL_STEP_PERCENT  1
@@ -37,19 +43,29 @@
 /* If backend sends no UART commands for X ms, force safe fan speed */
 #define FAN_FALLBACK_MS       120000
 /* Safe fallback speed after timeout (scaled %, 0–100) */
-#define FAN_FALLBACK_DUTY     0
+#define FAN_FALLBACK_DUTY     100
 
 /* === DEFAULT DUTY (only used before calibration) === */
 #define FAN_DEFAULT_DUTY      50
 
 /* === WiFi DEFAULT (if NVS empty) === */
-#define WIFI_SSID     "SSID"
-#define WIFI_PASS     "PASSWORD"
+#define WIFI_SSID     "ssid"
+#define WIFI_PASS     "password"
 
 /* === MQTT DEFAULT (if NVS empty) === */
-#define MQTT_HOST     "mqtt.local"
+#define MQTT_HOST     "mqtt://192.168.2.11"
 #define MQTT_PORT     1883
 #define MQTT_CLIENTID "fan2go"
+
+/* === MQTT AUTH === */
+#define MQTT_USER     "user"
+#define MQTT_PASS     "passwd"
+
+/* === MQTT DISCOVERY === */
+#define HA_DISCOVERY_PREFIX "homeassistant"
+#define HA_DEVICE_ID        "fan2go"
+#define HA_DEVICE_NAME      "ESP Fan Controller"
+
 
 /* === MQTT TOPICS === */
 #define MQTT_BASE_TOPIC         "fan2go"

@@ -298,7 +298,15 @@ void fan_init_all(void)
 
     fan_detect_connected(g_fans, MAX_FANS);
 
-    fan_calibrate_all();
+    #if FAN_ENABLE_CALIBRATION
+    	fan_calibrate_all();
+    #else
+	/* bez kalibrace: použij default */
+    	for (int i = 0; i < MAX_FANS; ++i) {
+        	g_fans[i].duty_min  = FAN_DEFAULT_DUTY;
+        	g_fans[i].calibrated = false;
+    	}
+    #endif
     
     s_fallback_timer = xTimerCreate("fb", pdMS_TO_TICKS(FALLBACK_TIMEOUT_MS),
                                     pdFALSE, NULL, fallback_timer_cb);

@@ -1,82 +1,136 @@
 # fan2go
 
-**ESP32 PWM + RPM controller pro až 5× 4-pin PC ventilátorů.**  
-Řízení přes USB (UART 115200), podporuje čtení otáček z tachometru, autokalibraci a nastavení PWM.
+ESP32 PWM + RPM controller pro až 5× 4-pin PC ventilátorů.  
+Řízení přes USB (UART 115200), měření otáček z tachometru, MQTT monitoring a Home Assistant auto-discovery.
 
 ---
 
-### Funkce
-- Ovládání až 5 ventilátorů
-- PWM regulace 0–100 %
-- Měření RPM pomocí tachometru
+FUNKCE
+- Ovládání až 5 ventilátorů (fan0–fan4)
+- PWM řízení 0–100 % (interně ESP32)
+- Měření RPM přes tachometr
 - Detekce připojeného ventilátoru
-- **Autokalibrace min. otáček při startu**
-- **Fallback bezpečné otáčky, pokud PC nekomunikuje**
-- Ovládání přes USB příkazy
-- Uložení a načtení konfigurace (WiFi, MQTT) do NVS
-- Web UI, MQTT (připraveno)
+- Volitelná autokalibrace minimálních otáček
+- Fallback bezpečné otáčky při ztrátě komunikace
+- USB protokol (UART 115200)
+- MQTT pouze pro monitoring (read-only)
+- Home Assistant MQTT Discovery
+- Web UI (stav / test)
+- Ukládání WiFi a MQTT konfigurace do NVS
 
 ---
 
-### Autokalibrace (jak funguje)
-Každý ventilátor má jiné minimum, při kterém začnou růst otáčky.  
-ESP32 automaticky zjistí toto minimum:
-
-1. Ventilátor se začne od 0 % a postupně se zvyšuje po **nastaveném kroku (např. 5 %)**.
-2. Po každém kroku počká na ustálení otáček.
-3. Jakmile se RPM poprvé zvýší > 0, tato hodnota se uloží jako **minimální duty**.
-4. V dalším provozu když nastavíte nižší hodnotu než minimum, automaticky se použije tato kalibrovaná hodnota.
-
-Díky tomu je škála PWM **0–100 % vždy plynulá**, i kdyby se ventilátor reálně rozbíhal např. teprve při 42 %.
+PWM A ROZSAHY
+- ESP32 pracuje s PWM v rozsahu 0–100 %
+- Linux hwmon používá rozsah 0–255
+- Přepočet 0–255 ↔ 0–100 zajišťuje USB bridge
+- Toto chování je záměrné a správné
 
 ---
 
-### Fallback (bezpečnost)
-Pokud ESP **nedostane žádný příkaz z PC po dobu X sekund**, nastaví bezpečnou hodnotu (výchozí 50 %).
+AUTOKALIBRACE
+Autokalibrace slouží ke zjištění minimální hodnoty PWM, při které se ventilátor skutečně roztočí.
 
-Parametry se nastavují v `config.h`:
+Princip:
+1. PWM se nastaví na 0 %
+2. Postupně se zvyšuje po malých krocích
+3. Po každém kroku se čeká na ustálení otáček
+4. Jakmile RPM poprvé smysluplně vzrostou, hodnota se uloží jako minimum
+5. Při běžném provozu se nízké hodnoty automaticky přepočítají nad toto minimum
 
-#define FAN_FALLBACK_MS 15000
-#define FAN_FALLBACK_DUTY 50
+Autokalibraci lze zcela vypnout v config.h:
 
+#define FAN_ENABLE_CALIBRATION 0   // 0 = vypnuto, 1 = zapnuto
 
----
-
-### Piny (nastavitelné v `main/config.h`)
-| Fan | PWM GPIO | Tach GPIO |
-|-----|----------|-----------|
-|  0  |    23    |    32     |
-|  1  |    19    |    33     |
-|  2  |    18    |    25     |
-|  3  |     5    |    26     |
-|  4  |     4    |    27     |
+Doporučeno vypnout u ventilátorů, které při nízkých otáčkách reportují nesmyslné RPM.
 
 ---
 
-### USB protokol (UART 115200)
+FALLBACK (BEZPECNOST)
+Pokud ESP po definovanou dobu nedostane žádný příkaz z backendu (USB / MQTT), automaticky nastaví bezpečné otáčky.
 
-| Příkaz | Popis | Odpověď |
-|--------|-------|---------|
-| `PING` | Test komunikace | `PONG` |
-| `SET FAN X Y` | Nastavit fan X na Y % | `OK` nebo `ERR` |
-| `GET FAN X` | Info o ventilátoru X | `FAN X Connected RPM Duty` |
-| `GET ALL` | Stav všech fanů | `ALL mask rpm... duty...` |
-| `GET RPM X` | Vrátí RPM fan X | `RPM X value` |
-| `GET DUTY X` | Vrátí PWM fan X (%) | `DUTY X value` |
-| `SET WIFI ssid pass` | Uloží WiFi údaje do NVS | `OK` |
-| `GET WIFI` | Vrátí uložené WiFi údaje | `WIFI ssid pass` |
-| `SET MQTT host clientid` | Uloží MQTT do NVS | `OK` |
-| `GET MQTT` | Vrátí uložené MQTT údaje | `MQTT host port clientid` |
+Nastavení v config.h:
+
+#define FAN_FALLBACK_MS    120000
+#define FAN_FALLBACK_DUTY  100
 
 ---
 
-### Licence
+PINY (main/config.h)
+
+Fan 0: PWM 23, TACH 32  
+Fan 1: PWM 19, TACH 33  
+Fan 2: PWM 18, TACH 25  
+Fan 3: PWM 5,  TACH 26  
+Fan 4: PWM 4,  TACH 27  
+
+---
+
+USB PROTOKOL (UART 115200)
+
+PING  
+→ PONG
+
+SET FAN X Y  
+→ OK / ERR  
+Y je duty v procentech (0–100)
+
+GET FAN X  
+→ FAN X connected rpm duty
+
+GET RPM X  
+→ RPM X value
+
+GET DUTY X  
+→ DUTY X value
+
+GET ALL  
+→ ALL mask rpm0 rpm1 ... duty0 duty1 ...
+
+SET WIFI ssid pass  
+→ OK
+
+GET WIFI  
+→ WIFI ssid pass
+
+SET MQTT host clientid  
+→ OK
+
+GET MQTT  
+→ MQTT host port clientid
+
+---
+
+MQTT
+- MQTT je pouze pro monitoring
+- Nenastavuje PWM
+- Publikuje RPM, duty a stav připojení
+- Retain = zapnuto
+- Automatická Home Assistant discovery
+
+V Home Assistant se vytvoří:
+- Jedno zařízení (ESP Fan Controller)
+- Pro každý ventilátor:
+  - Fan X RPM
+  - Fan X Duty
+
+---
+
+LINUX INTEGRACE
+Projekt počítá s Linux backendem:
+- kernel modul espfan (hwmon)
+- userspace USB bridge
+- kompatibilní se sensors, fancontrol a Home Assistant
+
+---
+
+LICENCE
 MIT
 
 ---
 
-### Poznámka
-Projekt je navržen pro Linux daemon **fan2go**, který bude sloužit jako most mezi ESP32 a Home Assistant / MQTT / Web konfigurací.  
-NVS ukládání umožní bezpečné uchování WiFi a MQTT bez přítomnosti v `config.h`.
-
+POZNAMKA
+ESP32 řeší real-time část (PWM, RPM, bezpečnost).  
+Linux / Home Assistant řeší logiku, monitoring a automatizace.  
+Projekt je navržen jako stabilní backend, ne jako experiment.
 
