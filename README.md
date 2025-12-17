@@ -66,38 +66,19 @@ Fan 4: PWM 4,  TACH 27
 
 ---
 
-USB PROTOKOL (UART 115200)
-
-PING  
-→ PONG
-
-SET FAN X Y  
-→ OK / ERR  
-Y je duty v procentech (0–100)
-
-GET FAN X  
-→ FAN X connected rpm duty
-
-GET RPM X  
-→ RPM X value
-
-GET DUTY X  
-→ DUTY X value
-
-GET ALL  
-→ ALL mask rpm0 rpm1 ... duty0 duty1 ...
-
-SET WIFI ssid pass  
-→ OK
-
-GET WIFI  
-→ WIFI ssid pass
-
-SET MQTT host clientid  
-→ OK
-
-GET MQTT  
-→ MQTT host port clientid
+### USB protokol (UART 115200) 
+| Příkaz | Popis | Odpověď | 
+|--------|-------|---------| 
+| PING | Test komunikace | PONG | 
+| SET FAN X Y | Nastavit fan X na Y % | OK nebo ERR | 
+| GET FAN X | Info o ventilátoru X | FAN X Connected RPM Duty | 
+| GET ALL | Stav všech fanů | ALL mask rpm... duty... | 
+| GET RPM X | Vrátí RPM fan X | RPM X value | 
+| GET DUTY X | Vrátí PWM fan X (%) | DUTY X value | 
+| SET WIFI ssid pass | Uloží WiFi údaje do NVS | OK | 
+| GET WIFI | Vrátí uložené WiFi údaje | WIFI ssid pass | 
+| SET MQTT host clientid | Uloží MQTT do NVS | OK | 
+| GET MQTT | Vrátí uložené MQTT údaje | MQTT host port clientid |
 
 ---
 
